@@ -1,0 +1,132 @@
+#!/usr/bin/env ruby
+require 'fileutils'
+require "optparse"
+
+Options = Struct.new(:input, :output, :types, :test, :quiet)
+
+class Parser
+  def self.parse(options)
+    args = Options.new
+    args.input = "input default"
+    args.output = "output default"
+    args.types = nil
+    args.test = false
+    args.quiet = false
+
+    opt_parser = OptionParser.new do |opts|
+      opts.banner = "Usage: batchrename file1 [file2] [options]"
+
+      # Help option
+      opts.on("-h", "--help", "Prints this help") {
+        puts opts
+        exit
+      }
+
+      # Input format option
+      opts.on("-i IN",
+              "--input IN",
+              String,
+              "File input naming scheme",
+              "Default: #{args.input}") {
+                |input| args.input = input
+              }
+
+      # Output format option
+      opts.on("-o OUT",
+              "--output OUT",
+              String,
+              "File output naming scheme",
+              "Default: #{args.input}") {
+                |output| args.output = output
+              }
+
+      # Filetype options
+      opts.on("-f FILETYPES",
+             "--filetype FILETYPES",
+             Array,
+             "Filetypes to work on",
+             "Default: all files") {
+               |types| args.types = types
+             }
+
+      # Test option
+      opts.on("-t",
+              "--test",
+              "Do a test run (no files will be renamed)") {
+                args.test = true
+              }
+
+      # Quiet option
+      opts.on("-q",
+              "--quiet",
+              "Only print errors") {
+                args.quiet = true
+              }
+    end
+
+    opt_parser.parse!(options)
+    return args
+  end
+end
+
+def parseOpts
+  begin
+    args = Parser.parse ARGV
+  rescue OptionParser::InvalidOption => e
+    puts e
+    exit
+  rescue OptionParser::InvalidArgument => e
+    puts e
+    exit
+  end
+
+  return args
+end
+
+def parseFiles fileTypes
+  puts "Need to specify at least one file." and exit if ARGV.empty?
+  puts "Collecting files..."
+
+  # Filter out all files with the wrong file type
+  paths = ARGV.to_a
+  paths.reject! do |path|
+    fileTypes.map { |ft| path[/.+\.#{ft}/] }
+             .compact
+             .empty?
+  end if fileTypes
+
+  # Verify that files exist, are writable and are unique
+  files = Array.new
+  errors = Array.new
+
+  paths.each do |path|
+    if not File.exist? path
+      errors << "Path does not exist: #{path}"
+
+    elsif not File.writable? path
+      errors << "File not writable: #{path}"
+
+    elsif not File.writable?(File.dirname path)
+      errors << "Directory not writable: #{path}"
+
+    elsif files.include? path
+      errors << "Duplicate file in list: #{path}"
+
+    else
+      files << path
+    end
+  end
+
+  # Return error and exit if any errors were encountered
+  if not errors.empty?
+    puts "\nEncountered one or more errors collecting files."
+    puts errors.sort
+    puts "Exiting..."
+    exit
+  end
+
+  files
+end
+
+args = parseOpts
+files = parseFiles args.types
