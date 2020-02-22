@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# Add files to transmission with simpler syntax than transmission-remote.
+# transmission-remote HOST -a FILE-1 -a FILE-2
+# is equivalent (but has some helpful extra output) to
+# transadd -c HOST FILE-1 FILE-2
+#
+# Just as with transmission-remote HOST can be omitted for localhost.
+
+# Make sure variables are unused
+unset HOST ADDED
+
+prelude() {
+    echo "transadd"
+    echo "A simpler interface for adding torrents via transmission-remote."
+    echo
+}
+
+usage() {
+    echo "transadd [-c HOSTNAME/IP] [-h] FILES"
+    exit
+}
+
+[ -z "$(command -v transmission-remote)" ] &&
+    echo "transmission-remote not installed or not executable." &&
+    exit
+
+# Get c if c is specified
+while getopts ":c::h" o; do
+    case "${o}" in
+        c)  host=${OPTARG}
+            ;;
+        h)  prelude && usage
+            ;;
+        *)  echo "Invalid option: ${OPTARG}"
+            usage
+            ;;
+    esac
+done
+
+# Remove optargs from $@
+shift $((OPTIND-1))
+
+# Add all files individually
+for file in "$@"; do
+    [ -n "$ADDED" ] &&
+        echo # empty line
+    ADDED="yes"
+
+    echo "File: ${file}"
+    [ -z "${host}" ] && transmission-remote -a "${file}"
+    [ -n "${host}" ] && transmission-remote "${host}" -a "${file}"
+done;
+
+# No files added, help the user out
+[ -z "$ADDED" ] &&
+    echo "No files specified!" &&
+    usage

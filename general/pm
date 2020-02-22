@@ -1,0 +1,65 @@
+#!/bin/sh
+[ -x "$(command -v tput)" ] &&
+    bold=$(tput bold) &&
+    red=$(tput setaf 1) &&
+    default=$(tput sgr0)
+
+usage() {
+    cat << EOF
+${bold}pm${default} All the pacman commands I couldn't be arsed to memorise.
+Update/upgrade:
+  syu
+  syyu
+  upgit
+Installation/uninstallation:
+  add
+  del
+Query packages:
+  all
+  not
+  aur
+  git
+  look
+  search
+
+Any other command will show this help menu.
+EOF
+    exit 0
+}
+
+notify_run() {
+    echo "${bold}${red}Running command:"
+    echo "${default}${red}${1}${default}"
+    echo
+    eval $1
+}
+
+[ -z "$(command -v yay)" ] &&
+    echo "yay not installed or not executable." &&
+    exit 1
+
+# Flatten list of arguments
+args="$(echo ${@:2})"
+
+case $1 in
+    # Update/upgrade
+    syu)    notify_run "yay -Syu --upgrademenu --combinedupgrade";;
+    syyu)   notify_run "yay -Syyu --upgrademenu --combinedupgrade";;
+    upgit)  notify_run "yay -Qm |
+    grep '\-git\|\-hg' |
+    awk '{print \$1}' |
+    yay -S -";;
+    # Installation/uninstallation
+    add)    notify_run "yay -S ${args}";;
+    del)    notify_run "yay -Rs ${args}";;
+    # Query packages
+    all)    notify_run "yay -Qe";;
+    not)    notify_run "yay -Qdtq";;
+    aur)    notify_run "yay -Qm";;
+    git)    notify_run "yay -Qm |
+    grep '\-git\|\-hg' |
+    awk '{print \$1}'";;
+    search) notify_run "yay -Ss";;
+    look)   notify_run "yay -Qi ${args}";;
+    *)      usage;;
+esac

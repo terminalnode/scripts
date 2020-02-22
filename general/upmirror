@@ -1,0 +1,153 @@
+#!/bin/sh
+# A simple script for downloading a new mirror list for Archlinux and rank them by speed.
+
+# Defaults
+countries="SE NO DK FI DE NL"
+if [ "$(id -u)" -eq 0 ]
+then
+    path="/etc/pacman.d"
+else
+    path="$HOME"
+fi
+
+# Bold typeface and stuff
+[ -x "$(command -v tput)" ] &&
+    bold=$(tput bold) &&
+    default=$(tput sgr0)
+
+# Most of the script logic resides in the following functions.
+help() {
+    cat << EOF
+${bold}upmirror${default}
+A tool for fetching the latest and fastest mirrors for Archlinux.
+
+-h, --help               Show this help text, then exit.
+-u, --url                Print the url from which mirrors will be fetched, then exit.
+-c, --countries [CODES]  Countries from which mirrors will be picked.
+-p, --path [PATH]        The directory in which the new mirrors will be saved.
+
+Countries:
+    Countries are specified using ISO 3166-1 two letter codes.
+    Default: ${bold}${countries}${default}
+
+Path:
+    If a file called mirrorlist already exists in the given directory a backup called mirrorlist.backup will be created.
+    
+    The default value for this parameter is:
+    ${bold}/etc/pacman.d/${default} when running as root.
+    ${bold}~/${default} when running as any other user.
+EOF
+    exit 0
+}
+
+dependency_check() {
+    # Checks if dependencies are installed and executable.
+    [ -z "$(command -v curl)" ] &&
+        echo "curl not found, please install the package ${bold}curl${default}." &&
+        depfail="yes"
+
+    [ -z "$(command -v rankmirrors)" ] &&
+        echo "rankmirrors not found, please install the package ${bold}pacman-contrib${default}." &&
+        depfail="yes"
+
+    [ -z "$(command -v getopt)" ] &&
+        echo "getopt not found, please install the package ${bold}util-linux${default}." &&
+        depfail="yes"
+
+    [ -n "$depfail" ] &&
+        exit 1
+}
+
+make_url() {
+    [ -z "$countries" ] &&
+        echo "${bold}ERROR!${default} The list of country codes is empty. Exiting." &&
+        exit 1
+    url="https://www.archlinux.org/mirrorlist/?protocol=https&use_mirror_status=on" 
+    for country in ${countries}
+        do url="$url&country=$country"
+    done
+
+    # If --url is set, display url and exit.
+    [ -n "$url_only" ] &&
+        echo "${bold}This is the url I would be using to download the mirrors:${default}" &&
+        echo "$url" &&
+        exit 0
+}
+
+get_mirrors() {
+    make_url
+    mirrors=$(
+        curl -s "$url" |
+        sed -e 's/^#Server/Server/' -e '/^#/d' |
+        rankmirrors -n 30 -
+    )
+
+    [ -z "$mirrors" ] &&
+        echo "${bold}ERROR!${default} New mirror file was empty." &&
+        echo "This may happen if the url supplied was bad." &&
+        echo "Check that the country codes you supplied were correct." &&
+        exit 1
+}
+
+write_file() {
+    # If there is a trailing slash on $path, remove it.
+    path="$(echo "$path" | sed 's/\/$//g')"
+
+    # Replace ~ with $HOME
+    echo "$HOME" | grep -q ':' &&
+        echo "${bold}ERROR!${default} Your home path can't have \":\" in it. What's wrong with you?" &&
+        exit 1
+    path=$(echo "$path" | sed "s:$~:${HOME}:")
+
+    # Check that save location exists and is a directory.
+    [ ! -d "$path" ] &&
+        echo "${bold}ERROR!${default} ${path} either does not exist or isn't a directory. Aborting." &&
+        exit 1
+
+    # Check that the save location exists and is writeable.
+    [ ! -w "$path" ] &&
+        echo "${bold}ERROR!${default} ${path}/ is not writeable. Aborting." &&
+        exit 1
+    
+    # Check if a mirrorlist already exists in $path, if it does create a backup
+    [ -r "${path}/mirrorlist" ] &&
+        cp "${path}/mirrorlist" "${path}/mirrorlist.backup"
+
+    # Write new mirrorlist
+    echo "$mirrors" > "${path}/mirrorlist"
+}
+
+# Parse options
+options=$(getopt -l "help,url,path:,countries:" -o "hup:c:" -- "$@")
+eval set -- "$options"
+
+while true
+do
+    case $1 in
+        -h|--help)
+            help
+            exit 0
+            ;;
+        -u|--url)
+            url_only=true
+            ;;
+        -c|--countries)
+            countries="$2"
+            shift
+            ;;
+        -p|--path)
+            path="$2"
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+    esac
+    shift
+done
+
+# Run program
+dependency_check
+get_mirrors
+write_file
