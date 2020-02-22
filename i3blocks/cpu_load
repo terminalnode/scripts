@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+import os
+import psutil
+
+# Get CPU average
+cpu = psutil.cpu_percent(interval=1)
+
+# Get load average
+load = os.getloadavg()[0]
+
+# Print result
+print(f"{cpu}% / {load}")

@@ -1,0 +1,29 @@
+#!/bin/sh
+sleep 0.05 # Too fast!!!
+getsink() {
+    pacmd list-sinks |
+        awk '/index:/{i++} /* index:/{print i; exit}'
+}
+
+getvolume() {
+    pacmd list-sinks |
+        awk '/^\svolume:/{i++} i=='"$(getsink)"'{print $5; exit}' |
+        cut -d'%' -f1 # remove trailing % sign
+}
+
+getmute() {
+    pacmd list-sinks |
+        awk '/^\smuted:/{i++} i=='"$(getsink)"'{print $2; exit}'
+}
+
+mute=$(getmute)
+vol=$(getvolume)
+if [ "$mute" = "yes" ]; then
+    echo " Muted"
+elif [ "$vol" -ge 75 ]; then
+    echo " ${vol}%"
+elif [ "$vol" -ge 40 ]; then
+    echo " ${vol}%"
+else
+    echo " ${vol}%"
+fi

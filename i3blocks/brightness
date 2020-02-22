@@ -1,0 +1,6 @@
+#!/bin/sh
+sleep 0.05 # too fast otherwise
+max=$(cat /sys/class/backlight/intel_backlight/max_brightness)
+actual=$(cat /sys/class/backlight/intel_backlight/actual_brightness)
+percent="$((100 * actual / max))%"
+echo $percent

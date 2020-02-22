@@ -1,0 +1,62 @@
+#!/bin/sh
+# The battery on my T420 has a pesky habit of changing names.
+# It's very disturbing, but this ensures that it always works.
+BAT="/sys/class/power_supply/BAT0"
+if [ -f ${BAT}/charge_full ]; then
+    FULL=$( cat ${BAT}/charge_full )
+elif [ -f ${BAT}/energy_full ]; then
+    FULL=$( cat ${BAT}/energy_full )
+fi
+
+if [ -f ${BAT}/charge_full ]; then
+    NOW=$( cat ${BAT}/charge_now )
+elif [ -f ${BAT}/energy_full ]; then
+    NOW=$( cat ${BAT}/energy_now )
+fi
+
+CHARGE=$(( 100 * NOW / FULL ))
+
+# Status can be "Charging", "Discharging", "Full" or "Unknown".
+# If charging or full a powersupply must be connected.
+STATUS=$( sed '2!d;s/.*=//' ${BAT}/uevent )
+
+if [ "$STATUS" = "Full" ]; then
+    SYMBOL=" "
+    CHARGE="FULL"
+fi
+
+if [ "$STATUS" = "Charging" ]; then
+    SYMBOL="  "
+    CHARGE="${CHARGE}%"
+fi
+
+if [ "$STATUS" = "Discharging" ]; then
+    if [ "$CHARGE" -le 10 ]; then
+        SYMBOL="  "
+        echo "${SYMBOL}${CHARGE}%"
+        exit 33
+
+    elif [ "$CHARGE" -le 25 ]; then
+        SYMBOL="  "
+        echo "${SYMBOL}${CHARGE}%"
+        exit 33
+
+    elif [ "$CHARGE" -le 50 ]; then
+        SYMBOL="  "
+
+    elif [ "$CHARGE" -le 75 ]; then
+        SYMBOL="  "
+
+    else
+        SYMBOL=" "
+    fi
+    CHARGE="${CHARGE}%"
+fi
+
+if [ "$STATUS" = "Unknown" ]; then
+    SYMBOL=" "
+    CHARGE="${CHARGE}%"
+fi
+
+echo "${SYMBOL}${CHARGE}"
+echo "${SYMBOL}${CHARGE}"

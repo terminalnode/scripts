@@ -1,0 +1,8 @@
+#!/bin/sh
+interface=wifi
+ssid=$(netctl list | grep '*' | cut -d' ' -f2-)
+hostname=$(hostname -i | cut -d' ' -f1)
+ip=$(ip addr show ${interface} | grep "inet " | awk '{ print $2 }' | cut -d'/' -f1)
+
+echo ${ssid} ${ip}
+echo ${ssid} ${ip}

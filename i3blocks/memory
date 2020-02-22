@@ -1,0 +1,5 @@
+#!/bin/sh
+freemem=$(free -tbh | grep "^Mem:" | awk '{print $4}')
+swap=$(free -tbh | grep "^Swap:" | awk '{print $3}')
+echo " ${freemem} (w/ ${swap} swap)"
+echo " ${freemem} (w/ ${swap} swap)"
