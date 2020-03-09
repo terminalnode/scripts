@@ -1,0 +1,153 @@
+#!/bin/env ruby
+require 'tempfile'
+require 'fileutils'
+
+def parseFiles
+  if ARGV.empty?
+    puts "No files specified.\nExiting..."
+    exit
+  end
+
+  # Verify that files exist, are writable and are unique
+  output = Hash.new
+  files = Hash.new
+  errors = Array.new
+  count = 0
+
+  ARGV.each do |path|
+    fileHash = Hash.new
+
+    if not File.exist? path
+      errors << "Path does not exist: #{path}"
+
+    elsif not File.writable? path
+      errors << "File not writable: #{path}"
+
+    elsif not File.writable?(File.dirname path)
+      errors << "Directory not writable: #{path}"
+
+    elsif files.include? path
+      errors << "Duplicate file in list: #{path}"
+
+    else
+      abs_path = File.absolute_path path
+      dir = File.dirname abs_path
+      count += 1
+
+      files[dir] = Array.new if files[dir].nil?
+      fileHash[:abs] = abs_path
+      fileHash[:dir] = dir
+      fileHash[:name] = File.basename path
+      fileHash[:num] = count
+      files[dir] << fileHash
+    end
+  end
+
+  output[:files] = files
+  output[:errors] = errors
+  output[:count] = count
+  output
+end
+
+def createTempfile(parseHash)
+  tempfile = Tempfile.new
+  digits = parseHash[:count].to_s.length
+
+  # Initialize text with some kind of instructions
+  text = [
+    "# All the files to rename have received an index,",
+    "# do not remove that index. If you do not wish to",
+    "# rename a given file either comment it out or delete",
+    "# the row.\n"
+  ].join("\n")
+
+  # If there are any errors, add that to the text as well.
+  if not parseHash[:errors].empty?
+    text << "\n# The following errors were encountered when parsing files:\n# "
+    text << parseHash[:errors].join("\n# ")
+    text << "\n"
+  end
+
+  parseHash[:files].each_pair do |parentDir, files|
+    text << "\n# #{parentDir}\n"
+    files.each do |file|
+      paddedNum = "%0#{digits}d" % file[:num]
+      text << "#{paddedNum} #{file[:name]}\n"
+    end
+  end
+
+  tempfile << text.strip
+  tempfile.rewind
+  tempfile
+end
+
+def getRenameMap(parseHash, tempfile)
+  # Flatten the parseHash
+  files = parseHash[:files]
+    .values
+    .flatten
+    .to_h { |file| [file[:num], file] }
+  renameMap = Array.new
+
+  # Edit temp file
+  editor = ENV["VISUAL"]
+  editor = ENV["EDITOR"] if editor.nil?
+  system editor, tempfile.path
+
+  tempfile
+    .read
+    .gsub(/^\s*#.*$/, "")
+    .gsub(/^\s*$\n/, "")
+    .split("\n")
+    .each do |s|
+      num = s[/\d+\s/].strip.to_i
+      hash = files[num]
+      hash[:new] = s.sub(/\d+\s+/, "").strip
+      renameMap << hash
+    end
+  renameMap
+end
+
+def renameFiles(renameMap)
+  renameMap.each do |item|
+    new_abs = File.absolute_path item[:new]
+    new_parent = File.dirname new_abs
+
+    # Skip if the filename/path has not been changed
+    if new_abs == item[:abs]
+      puts "Skipping #{new_abs} (no change)"
+      next
+    end
+
+    # Create dir if not exists, skip if unable to create
+    if not Dir.exist? new_parent
+      begin
+        FileUtils.mkpath new_parent
+      rescue SystemCallError
+        puts "Skipping #{new_abs} (can not create parent dir)"
+        next
+      end
+    end
+
+    # Skip if parent dir is not writable
+    if not File.writable?(new_parent)
+      puts "Skipping #{new_abs} (directory not writable)"
+      next
+    end
+
+    # Final check to see that the file still exists
+    if not File.exist?(item[:abs]) or not File.writable?(item[:abs])
+      puts "Skipping #{new_abs} (file no longer exists or is not writable)"
+      next
+    end
+
+    # Moving file!
+    puts "Moving #{item[:abs]} to #{new_abs}!"
+    p FileUtils.mv item[:abs], new_abs
+  end
+end
+
+parseHash = parseFiles
+tempfile = createTempfile parseHash
+renameMap = getRenameMap parseHash, tempfile
+renameFiles renameMap

@@ -12,10 +12,13 @@ package manager tasks.
 for you using `rankmirrors` from `pacman-contrib`.
 
 ### Others
-* `batchrename` (ruby, **WIP**) is tool for batch renaming files.
+* `batchrename` (ruby, **WIP**) is tool for batch renaming files using regexps
+and naming patterns.
 * `igdl` (ruby) is a tool for asynchronously downloading images of instagram.
 Requires [cli-ui](https://github.com/Shopify/cli-ui). UI doesn't update correctly
 when there are too many items to fit on screen, but completes all of the tasks anyway.
+* `editorrenamer` (ruby) is a tool for batch renaming files using the users
+`$VISUAL` or `$EDITOR`.
 * `track_renamer.py` is a tool for batch renaming music files. It will
 probably be replaced by batchrename in the near future.
 * `transadd` (shell script) is a tool for adding torrent files to
