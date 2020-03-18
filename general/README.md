@@ -15,8 +15,7 @@ for you using `rankmirrors` from `pacman-contrib`.
 * `batchrename` (ruby, **WIP**) is tool for batch renaming files using regexps
 and naming patterns.
 * `igdl` (ruby) is a tool for asynchronously downloading images of instagram.
-Requires [cli-ui](https://github.com/Shopify/cli-ui). UI doesn't update correctly
-when there are too many items to fit on screen, but completes all of the tasks anyway.
+Requires [cli-ui](https://github.com/Shopify/cli-ui).
 * `editorrenamer` (ruby) is a tool for batch renaming files using the users
 `$VISUAL` or `$EDITOR`.
 * `track_renamer.py` is a tool for batch renaming music files. It will

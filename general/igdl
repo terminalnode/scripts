@@ -30,7 +30,7 @@ def parseArgs()
   parsed
 end
 
-def fetchMetadata(post, index)
+def fetchMetadata(post)
   metadata = JSON.parse(Nokogiri::HTML(post[:meta].open)).dig("graphql", "shortcode_media")
 
   time = Time.at(metadata["taken_at_timestamp"])
@@ -62,35 +62,52 @@ def fetchMetadata(post, index)
   post
 end
 
+def update_spinner(spinner, status)
+  spinner.update_title "{{@widget/status:#{status[:finished]}:#{status[:error]}:#{status[:downloading]}:#{status[:metadata]}}}"
+end
+
 def run
-  posts = parseArgs
-
   CLI::UI::StdoutRouter.enable
-  CLI::UI::Frame.open("igdl") do
-    sg = CLI::UI::SpinGroup.new
-    posts.each_with_index do |post, index|
-      sg.add("#{post[:post]}") do |spinner|
-        fetchMetadata post, index
 
-        if post[:isVideo]
-          spinner.update_title("#{index}. Downloading video #{post[:caption]}")
-        else
-          spinner.update_title("#{index}. Downloading image #{post[:caption]}")
-        end
+  CLI::UI::Spinner.spin("Initializing...") do |spinner|
+    # Setup
+    threads = Array.new
+    posts = parseArgs
+    status = {
+      :metadata => posts.count,
+      :downloading => 0,
+      :error => 0,
+      :finished => 0
+    }
+    update_spinner spinner, status
 
+    # Create threads
+    posts.each do |post|
+      threads << Thread.new(post, spinner, status) do
+        # Fetch metadata
+        fetchMetadata post
+        status[:metadata] -= 1
+        status[:downloading] += 1
+        update_spinner spinner, status
+
+        # Download content
         post[:file] = URI.open post[:download]
 
-        spinner.update_title("#{index}. Saving file #{post[:caption]}")
+        # Save file to disk
         FileUtils.mkpath(post[:path]) unless Dir.exists?(post[:path])
         File.open("./#{post[:path]}/#{post[:filename]}", "wb") do |file|
           file.write(post[:file].read)
         end
 
-        spinner.update_title("#{index}. All done! #{post[:caption]}")
-      end
-    end
-    sg.wait
-  end
+        # Update status to say that we're finished
+        status[:downloading] -= 1
+        status[:finished] += 1
+        update_spinner spinner, status
+      end # thread end
+    end # posts.each_with_index end
+
+    threads.each {|t| t.join}
+  end # spinner end
 end
 
 run
