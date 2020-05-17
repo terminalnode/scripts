@@ -20,5 +20,6 @@ Requires [cli-ui](https://github.com/Shopify/cli-ui).
 `$VISUAL` or `$EDITOR`.
 * `track_renamer.py` is a tool for batch renaming music files. It will
 probably be replaced by batchrename in the near future.
+* `scalevid` (shell script) is a tool for using ffmpeg to scale videos.
 * `transadd` (shell script) is a tool for adding torrent files to
 [transmission](https://transmissionbt.com/) using `transmission-remote`.
