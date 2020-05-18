@@ -28,9 +28,18 @@ while getopts ":h::w:" o; do
   esac
 done
 
+# Remove optargs from $@
+shift $((OPTIND-1))
+
 # Check that ffmpeg exists and is executable
 if [ -z "$(command -v ffmpeg)" ] ; then
   echo "ffmpeg not installed or not executable."
+  exit 1
+fi
+
+# Check that at least some files were specified
+if [ -z "$@" ] ; then
+  echo "No files specified, specify some files and try again."
   exit 1
 fi
 
@@ -52,15 +61,6 @@ fi
 # Check that neither height nor width are 0
 if [ "$width" -eq "0" ] || [ "$height" -eq "0" ] ; then
   echo "Neither height nor width can be zero."
-  exit 1
-fi
-
-# Remove optargs from $@
-shift $((OPTIND-1))
-
-# Check that at least some files were specified
-if [ -z "$@" ] ; then
-  echo "No files specified, specify some files and try again."
   exit 1
 fi
 
