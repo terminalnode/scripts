@@ -18,6 +18,8 @@ of the battery.
 `/sys/class/backlight/intel_backlight` and calculates the current percentage.
 * `cpu_load` (python) reads the CPU power usage and load average using the
 python `os` and `psutil` modules.
+* `integrity_ip_check` (shell script) checks with the integrity.st API whether
+we're connected through the integrity VPN service.
 * `lan` (shell script) uses `netctl`, `hostname` and `ip addr show` to get
 the name of the SSID and IP of the current network connection.
 * `memory` (shell script) uses `free` to generate how much memory and swap

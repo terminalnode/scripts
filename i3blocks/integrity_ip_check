@@ -1,0 +1,20 @@
+#!/bin/sh
+status=$(curl -s "https://api.5july.net/1.0/ipcheck" | jq ".connected")
+
+if [ -z $status ]; then
+  echo "  No response "  # full text
+  echo "  "            # short text
+  echo "#FFFFFF"        # fg color
+  echo "#FF1010"        # bg color
+
+elif ($status); then
+  echo "  Integrity "  # full text
+  echo "  "            # short text
+
+else
+  echo "  Integrity "  # full text
+  echo "  "            # short text
+  echo "#FFFFFF"        # fg color
+  echo "#FF1010"        # bg color
+
+fi

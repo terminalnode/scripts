@@ -18,7 +18,7 @@ CHARGE=$(( 100 * NOW / FULL ))
 
 # Status can be "Charging", "Discharging", "Full" or "Unknown".
 # If charging or full a powersupply must be connected.
-STATUS=$( sed '2!d;s/.*=//' ${BAT}/uevent )
+STATUS=$( sed '3!d;s/.*=//' ${BAT}/uevent )
 
 if [ "$STATUS" = "Full" ]; then
     SYMBOL=" "
