@@ -14,6 +14,8 @@ for you using `rankmirrors` from `pacman-contrib`.
 ### Others
 * `batchrename` (ruby, **WIP**) is tool for batch renaming files using regexps
 and naming patterns.
+* `decimal_time` (ruby) output the current time in decimal time (sometimes called
+metric time), that is with 10 hours in a day and 100 minutes in an hour.
 * `igdl` (ruby) is a tool for asynchronously downloading images of instagram.
 Requires [cli-ui](https://github.com/Shopify/cli-ui).
 * `editorrenamer` (ruby) is a tool for batch renaming files using the users
