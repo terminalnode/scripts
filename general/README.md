@@ -16,6 +16,8 @@ ones are fastest for you using `rankmirrors` from `pacman-contrib`.
 ## Ruby
 Scrits written in Ruby. Ruby is amazing, we should use ruby for everything.
 
+* `batchrename` (unfinished) is tool for batch renaming files using regexps
+and naming patterns.
 * `decimal_time` output the current time in decimal time (sometimes called
 metric time), that is with 10 hours in a day and 100 minutes in an hour.
 * `editorrenamer` is a tool for batch renaming files using the users
@@ -37,10 +39,3 @@ Scripts written in Python.
 
 * `track_renamer.py` is a tool for batch renaming music files. It will
 probably be replaced by batchrename in the near future.
-
-
-## Unfinished / WIP
-Scripts that are or were works in progress.
-
-* `batchrename` (ruby) is tool for batch renaming files using regexps
-and naming patterns.
