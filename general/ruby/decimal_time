@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
-# Output the current time in decimal time with 1 normal second accuracy.
+# Output the current time in decimal time / metric time.
+# Decimal time is a system of time keeping where each day consists of
+# ten hours, each hour consists of 100 minutes and each minute consists
+# of 100 seconds.
+
 require "date"
 
 decimalHourSeconds = 8640
@@ -7,6 +11,6 @@ decimalMinuteSeconds = 86.4
 
 secondsPassed = DateTime.now.to_time.to_i - Date.today.to_time.to_i
 decimalHour, secondsPassed = secondsPassed.divmod(decimalHourSeconds)
-decimalMinute = (secondsPassed / decimalMinuteSeconds).to_i
+decimalMinute = secondsPassed / decimalMinuteSeconds
 
-puts "#{decimalHour}:#{decimalMinute}"
+puts "#{'%02d' % decimalHour}:#{'%05.2f' % decimalMinute}"
