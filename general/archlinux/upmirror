@@ -32,7 +32,7 @@ Countries:
 
 Path:
     If a file called mirrorlist already exists in the given directory a backup called mirrorlist.backup will be created.
-    
+
     The default value for this parameter is:
     ${bold}/etc/pacman.d/${default} when running as root.
     ${bold}~/${default} when running as any other user.
@@ -62,7 +62,7 @@ make_url() {
     [ -z "$countries" ] &&
         echo "${bold}ERROR!${default} The list of country codes is empty. Exiting." &&
         exit 1
-    url="https://www.archlinux.org/mirrorlist/?protocol=https&use_mirror_status=on" 
+    url="https://archlinux.org/mirrorlist/?protocol=https&use_mirror_status=on"
     for country in ${countries}
         do url="$url&country=$country"
     done
