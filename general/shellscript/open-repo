@@ -9,30 +9,31 @@
 # Exec=open-repo -wi
 # Terminal=false
 
-root_directory="$HOME/code"
-
-# Default picker and editor
-picker="wofi --dmenu"
+# Default picker, editor and root directory
+picker="fzf"
 editor="idea"
+root_directory="$HOME/code"
 
 function print_help {
 	cat <<- HELP
 	Available picker options:
-	 -w        Use 'wofi --dmenu' (default)
-	 -f        Use 'fzf'
+	 -w        Use 'wofi --dmenu'
+	 -f        Use 'fzf' (default)
 	 -p 'cmd'  Use a custom command
 
 	 Available editor options:
 	 -i        Use 'idea' (default)
 	 -c        Use 'code'
+	 -t        Use 'echo' (for testing)
 	 -e 'cmd'  Use a custom command
 
 	Other options:
-	 -h        Print this help, then exit
+	-r '/path' Change the root used when looking for repos (default: "\$HOME/code")
+	-h         Print this help, then exit
 	HELP
 }
 
-while getopts ":wfp:ice:h" opt; do
+while getopts ":wfp:icte:hr:" opt; do
 	case "${opt}" in
 		# Picker options
 		w)	picker="wofi --dmenu" ;;
@@ -42,10 +43,12 @@ while getopts ":wfp:ice:h" opt; do
 		# Editor options
 		i)	editor="idea" ;;
 		c)	editor="code" ;;
+		t)	editor="echo" ;;
 		e)	editor="$OPTARG" ;;
 
 		# Other options
 		h)	print_help && exit 0 ;;
+		r)	root_directory=${OPTARG} ;;
 	esac
 done
 
@@ -60,4 +63,14 @@ function list-repos {
 	| sed -e 's#/.git$##g' -e "s#$root_directory/##g"
 }
 
-$editor "$root_directory/$(list-repos | $picker)"
+# Verify that the chosen directory is a real directory
+if [ ! -d "$root_directory" ]; then
+	echo "Root directory '$root_directory' is not a directory..."
+	exit 1
+fi
+
+# If something was picked, open it in the editor, otherwise exit with an error
+picked_path="$(list-repos | $picker || exit 1)"
+[ -z "$picked_path" ] \
+	&& exit 1 \
+	|| $editor "$root_directory/$picked_path"
