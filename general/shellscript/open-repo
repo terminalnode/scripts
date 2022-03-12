@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# vim: noet ci pi sts=0 sw=2 ts=2:
+
+# Suggested usage is with dmenu/wofi/dmenu etc Easiest way to do this is to add an appropriate
+# desktop file. Something like this perhaps:
+# [Desktop Entry]
+# Type=Application
+# Name=Open Repository...
+# Exec=open-repo -wi
+# Terminal=false
+
+root_directory="$HOME/code"
+
+# Default picker and editor
+picker="wofi --dmenu"
+editor="idea"
+
+function print_help {
+	cat <<- HELP
+	Available picker options:
+	 -w        Use 'wofi --dmenu' (default)
+	 -f        Use 'fzf'
+	 -p 'cmd'  Use a custom command
+
+	 Available editor options:
+	 -i        Use 'idea' (default)
+	 -c        Use 'code'
+	 -e 'cmd'  Use a custom command
+
+	Other options:
+	 -h        Print this help, then exit
+	HELP
+}
+
+while getopts ":wfp:ice:h" opt; do
+	case "${opt}" in
+		# Picker options
+		w)	picker="wofi --dmenu" ;;
+		f)	picker="fzf" ;;
+		p)	picker="$OPTARG" ;;
+
+		# Editor options
+		i)	editor="idea" ;;
+		c)	editor="code" ;;
+		e)	editor="$OPTARG" ;;
+
+		# Other options
+		h)	print_help && exit 0 ;;
+	esac
+done
+
+function list-repos {
+	find "$root_directory" \
+		-maxdepth 3 \
+		-type d \
+		-name '.git' \
+		-not -wholename '*/\.unison*' -prune \
+		-not -wholename '*/_*' -prune \
+		-not -wholename '*/old-*' -prune \
+	| sed -e 's#/.git$##g' -e "s#$root_directory/##g"
+}
+
+$editor "$root_directory/$(list-repos | $picker)"
