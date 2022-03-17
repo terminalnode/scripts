@@ -17,19 +17,19 @@ root_directory="$HOME/code"
 function print_help {
 	cat <<- HELP
 	Available picker options:
-	 -w        Use 'wofi --dmenu'
-	 -f        Use 'fzf' (default)
-	 -p 'cmd'  Use a custom command
+	 -w         Use 'wofi --dmenu'
+	 -f         Use 'fzf' (default)
+	 -p 'cmd'   Use a custom command
 
 	 Available editor options:
-	 -i        Use 'idea' (default)
-	 -c        Use 'code'
-	 -t        Use 'echo' (for testing)
-	 -e 'cmd'  Use a custom command
+	 -i         Use 'idea' (default)
+	 -c         Use 'code'
+	 -t         Use 'echo' (for testing)
+	 -e 'cmd'   Use a custom command
 
 	Other options:
-	-r '/path' Change the root used when looking for repos (default: "\$HOME/code")
-	-h         Print this help, then exit
+	 -r '/path' Change the root used when looking for repos (default: "\$HOME/code")
+	 -h         Print this help, then exit
 	HELP
 }
 
