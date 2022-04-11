@@ -29,6 +29,8 @@ Requires [cli-ui](https://github.com/Shopify/cli-ui).
 ## Shell script
 Scripts written in shell script.
 
+* `harden` is a tool for converting symlinks to hardlinks, plus leaving a
+`.hardlink` file pointing to the original file.
 * `scalevid` is a tool for using ffmpeg to scale videos
 * `transadd` is a tool for adding torrent files to
 [transmission](https://transmissionbt.com/) using `transmission-remote`.

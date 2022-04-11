@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Convert symlinks to hard links, and leave a .hardlink-file
+# pointing to the location of the original file.
+
+function harden() {
+  link_file="$@"
+  original_file=$(readlink -f "$link_file")
+
+  if [ ! -f "$original_file" ]; then
+    echo 'Failed to link file, original does not exist!'
+    echo "Link:     $link_file"
+    echo "Original: $original_file"
+    echo
+    return 1
+  fi
+
+  echo "$original_file" > "$link_file".hardlink
+  ln -f "$original_file" "$link_file"
+}
+export -f harden
+
+for path in "$@"; do
+  find "$path" -type l -exec bash -c 'harden "$0"' {} \;
+done
